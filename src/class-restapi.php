@@ -18,28 +18,33 @@ class RestAPI {
 				'methods'             => 'POST',
 				'callback'            => array( __CLASS__, 'add_results_callback' ),
 				'args'                => array(
-					'commit'  => array(
+					'commit'   => array(
 						'required'    => true,
 						'description' => 'The SVN commit changeset number.',
 						'type'        => 'integer',
 					),
-					'results' => array(
+					'results'  => array(
 						'required'          => true,
 						'description'       => 'phpunit results in JSON format.',
 						'type'              => 'string',
 						'validate_callback' => array( __CLASS__, 'validate_callback' ),
 					),
-					'message' => array(
+					'message'  => array(
 						'required'          => true,
 						'description'       => 'The SVN commit message.',
 						'type'              => 'string',
 						'validate_callback' => array( __CLASS__, 'validate_callback' ),
 					),
-					'env'     => array(
+					'env'      => array(
 						'required'          => true,
 						'description'       => 'JSON blob containing information about the environment.',
 						'type'              => 'string',
 						'validate_callback' => array( __CLASS__, 'validate_callback' ),
+					),
+					'platform' => array(
+						'required'    => false,
+						'description' => 'Platform identification e.g. Managed, Shared.',
+						'type'        => 'string',
 					),
 				),
 				'permission_callback' => array( __CLASS__, 'permission' ),
@@ -114,11 +119,16 @@ class RestAPI {
 		}
 
 		$current_user = wp_get_current_user();
+		$platform     = $parameters['platform'] ?? 'default';
 
 		$args = array(
 			'post_parent' => $parent_id,
 			'post_type'   => 'result',
 			'numberposts' => 1,
+			'meta_query'  => array(
+				'key'   => 'platform',
+				'value' => $platform,
+			),
 			'author'      => $current_user->ID,
 		);
 
@@ -128,7 +138,7 @@ class RestAPI {
 			$post_id = $results[0]->ID;
 		} else {
 			$results = array(
-				'post_title'   => $current_user->user_login . ' - ' . $slug,
+				'post_title'   => $current_user->user_login . ' - ' . $platform . ' - ' . $slug,
 				'post_content' => '',
 				'post_status'  => 'publish',
 				'post_author'  => $current_user->ID,
@@ -147,6 +157,7 @@ class RestAPI {
 		$env     = isset( $parameters['env'] ) ? json_decode( $parameters['env'], true ) : array();
 		$results = isset( $parameters['results'] ) ? json_decode( $parameters['results'], true ) : array();
 
+		update_post_meta( $post_id, 'platform', $platform );
 		update_post_meta( $post_id, 'env', $env );
 		update_post_meta( $post_id, 'results', $results );
 
