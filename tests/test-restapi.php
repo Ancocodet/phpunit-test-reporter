@@ -213,7 +213,7 @@ class TestRestAPI extends WP_UnitTestCase {
 		);
 	}
 
-	public function tearDown() {
+	public function tearDown() : void {
 		parent::tearDown();
 		global $wp_rest_server;
 		$wp_rest_server = null;
