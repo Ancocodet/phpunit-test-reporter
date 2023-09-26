@@ -10,7 +10,7 @@
  */
 class TestRestAPI extends WP_UnitTestCase {
 
-	public function setUp() {
+	public function setUp() : void {
 		parent::setUp();
 
 		global $wp_rest_server;
